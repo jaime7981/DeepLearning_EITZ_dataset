@@ -1,12 +1,28 @@
 import tensorflow as tf
-import csv
+import csv, datetime, pickle
 from keras.preprocessing.image import load_img, img_to_array
 
 from simple import SimpleModel
 from resnet import SEBlock, ResidualBlock, BottleneckBlock, ResNetBlock, ResNetBackbone, ResNet
 
+from sklearn.metrics import confusion_matrix
+import numpy as np
+
+
 EPOCH_NUM = 50
 TRAINED_MODELS_PATH = './trained_models'
+
+
+class SaveHistoryCallback(tf.keras.callbacks.Callback):
+    def on_epoch_end(self, epoch, logs=None):
+        # Capture and save training history data (accuracy and loss)
+        if epoch == 0:
+            self.history = {'accuracy': [], 'loss': [], 'val_accuracy': [], 'val_loss': []}
+        self.history['accuracy'].append(logs.get('accuracy'))
+        self.history['loss'].append(logs.get('loss'))
+        self.history['val_accuracy'].append(logs.get('val_accuracy'))
+        self.history['val_loss'].append(logs.get('val_loss'))
+
 
 class LocalDataset():
     def __init__(self, name = './Sketch_EITZ') -> None:
@@ -111,13 +127,42 @@ def main(dataset_model):
         ]
     )
 
-    simple_model.fit(
+    callbacks = [SaveHistoryCallback()]
+
+    history = simple_model.fit(
         dataset_model.train_dataset,
         validation_data=dataset_model.test_dataset,
-        epochs=EPOCH_NUM
+        epochs=EPOCH_NUM,
+        callbacks=callbacks
     )
 
-    simple_model.save(TRAINED_MODELS_PATH + '/simple_model.h5')
+    timestamp = datetime.datetime.now()
+
+    # save trainning data
+    with open(f'{TRAINED_MODELS_PATH}/{timestamp}_training_history.pkl', 'wb') as f:
+        pickle.dump(callbacks[0].history, f)
+
+    # save trained model
+    simple_model.save(f'{TRAINED_MODELS_PATH}/{timestamp}_simple_model.h5')
+
+    # After training, evaluate the model on a test dataset
+    test_loss, test_accuracy = simple_model.evaluate(dataset_model.test_dataset)
+
+    print(f'Test accuracy: {test_accuracy}')
+    print(f'Test loss: {test_loss}')
+
+    true_labels = []
+    predicted_labels = []
+
+    for images, labels in dataset_model.test_dataset:
+        predictions = simple_model.predict(images)
+        predicted_labels.extend(np.argmax(predictions, axis=1))
+        true_labels.extend(labels.numpy())
+
+    confusion = confusion_matrix(true_labels, predicted_labels)
+
+    with open(f'{TRAINED_MODELS_PATH}/{timestamp}_confusion_matrix.pkl', 'wb') as f:
+        pickle.dump(confusion, f)
 
 
 if __name__ == '__main__':
