@@ -1,5 +1,5 @@
 import tensorflow as tf
-import csv, datetime, pickle
+import csv, datetime
 from keras.preprocessing.image import load_img, img_to_array
 
 from simple import SimpleModel
@@ -7,21 +7,28 @@ from resnet import SEBlock, ResidualBlock, BottleneckBlock, ResNetBlock, ResNetB
 
 from sklearn.metrics import confusion_matrix
 import numpy as np
+import pandas as pd
 
 
 EPOCH_NUM = 50
-TRAINED_MODELS_PATH = './trained_models'
+TRAINED_MODELS_PATH = r'./trained_models'
 
 
 class SaveHistoryCallback(tf.keras.callbacks.Callback):
+    def __init__(self, filename):
+        super(SaveHistoryCallback, self).__init__()
+        self.filename = filename
+        self.history = {'accuracy': [], 'loss': [], 'val_accuracy': [], 'val_loss': []}
+
     def on_epoch_end(self, epoch, logs=None):
-        # Capture and save training history data (accuracy and loss)
-        if epoch == 0:
-            self.history = {'accuracy': [], 'loss': [], 'val_accuracy': [], 'val_loss': []}
         self.history['accuracy'].append(logs.get('accuracy'))
         self.history['loss'].append(logs.get('loss'))
         self.history['val_accuracy'].append(logs.get('val_accuracy'))
         self.history['val_loss'].append(logs.get('val_loss'))
+
+        # Convert history to DataFrame and save to CSV
+        history_df = pd.DataFrame(self.history)
+        history_df.to_csv(self.filename, index=False)
 
 
 class LocalDataset():
@@ -52,6 +59,13 @@ class LocalDataset():
                 self.mapping[row[0]] = row[1]
 
         self.number_of_classes = len(self.mapping)
+
+
+    def get_mapping_as_label_list(self):
+        label_list = []
+        for key in self.mapping:
+            label_list.append(key)
+        return label_list
 
 
     def image_analizis(self, image_path, label):
@@ -111,9 +125,57 @@ class LocalDataset():
         return image_decoded, label
 
 
+def train_model_save_data(model, dataset, name = 'default'):
+    timestamp = datetime.datetime.now()
+    timestamp = timestamp.strftime("%Y_%m_%d_%H_%M_%S")
+
+    base_file_path = TRAINED_MODELS_PATH + '/' + name + '_' + timestamp
+
+    # save epoch results
+    callbacks = [SaveHistoryCallback(base_file_path + '_history.csv')]
+
+    # Train the model
+    model.fit(
+        dataset.train_dataset,
+        epochs=EPOCH_NUM,
+        callbacks=callbacks,
+        validation_data=dataset.test_dataset
+    )
+
+    # save trained model
+    model.save(base_file_path + '_model.h5')
+
+    # save confusion matrix
+    generate_confusion_matrix(model, dataset, base_file_path)
+
+
+def generate_confusion_matrix(model, dataset, base_file_path):
+    true_labels = []
+    predicted_labels = []
+
+    for images, labels in dataset.test_dataset:
+        predictions = model.predict(images)
+        predicted_labels.extend(np.argmax(predictions, axis=1))
+        true_labels.extend(labels.numpy())
+
+    # Generate the confusion matrix
+    confusion = confusion_matrix(true_labels, predicted_labels)
+
+    class_labels = dataset.get_mapping_as_label_list()
+
+    # Create a DataFrame from the confusion matrix
+    confusion_df = pd.DataFrame(confusion, index=class_labels, columns=class_labels)
+
+    confusion_df.to_csv(base_file_path + '_confusion_matrix.csv', index=False)
+
+
 def main(dataset_model):
     input_shape = (dataset_model.img_height, dataset_model.img_width, 3)
     print(input_shape)
+
+    # make date with format year-month-day_hour:minute:second
+    timestamp = datetime.datetime.now()
+    timestamp = timestamp.strftime("%Y_%m_%d_%H_%M_%S")
 
     simple_model = SimpleModel(number_of_classes=dataset_model.number_of_classes)
     simple_model = simple_model.model(input_shape)
@@ -127,42 +189,7 @@ def main(dataset_model):
         ]
     )
 
-    callbacks = [SaveHistoryCallback()]
-
-    history = simple_model.fit(
-        dataset_model.train_dataset,
-        validation_data=dataset_model.test_dataset,
-        epochs=EPOCH_NUM,
-        callbacks=callbacks
-    )
-
-    timestamp = datetime.datetime.now()
-
-    # save trainning data
-    with open(f'{TRAINED_MODELS_PATH}/{timestamp}_training_history.pkl', 'wb') as f:
-        pickle.dump(callbacks[0].history, f)
-
-    # save trained model
-    simple_model.save(f'{TRAINED_MODELS_PATH}/{timestamp}_simple_model.h5')
-
-    # After training, evaluate the model on a test dataset
-    test_loss, test_accuracy = simple_model.evaluate(dataset_model.test_dataset)
-
-    print(f'Test accuracy: {test_accuracy}')
-    print(f'Test loss: {test_loss}')
-
-    true_labels = []
-    predicted_labels = []
-
-    for images, labels in dataset_model.test_dataset:
-        predictions = simple_model.predict(images)
-        predicted_labels.extend(np.argmax(predictions, axis=1))
-        true_labels.extend(labels.numpy())
-
-    confusion = confusion_matrix(true_labels, predicted_labels)
-
-    with open(f'{TRAINED_MODELS_PATH}/{timestamp}_confusion_matrix.pkl', 'wb') as f:
-        pickle.dump(confusion, f)
+    train_model_save_data(simple_model, dataset_model, 'simple')
 
 
 if __name__ == '__main__':
