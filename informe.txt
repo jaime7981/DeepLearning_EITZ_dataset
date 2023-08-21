@@ -1,0 +1,45 @@
+Datos de la Tarea
+
+Entrenar dos diferentes arquitecturas convolucionales para clasificación de sketches.
+
+La primera es una red simple con 3 capas convolucionales, la segunda es una ResNet18
+
+Las entradas son imágenes de tamaño 128×128
+
+Para la optimización, utilizar Adam con los parámetros por defecto.
+
+Los modelos serán entrenados por aproximadamente 50  épocas. Se recomienda un tamaño de batch de 64.
+
+El dataset contiene 20k imágenes distribuidas en 256 clases, con 16k imágenes de entrenamiento y 4k de test
+
+
+
+Gráficos y Métricas
+
+1. Gráfico epoch vs. loss y epoch vs. accuracy, para cada una de las redes descritas.
+
+2. Matriz de confusión entre clases.
+
+3. Accuracy de cada modelo, total y separado por clase. (gráfico de barras)
+
+4. Ejemplos de casos difíciles y fáciles.
+
+5. Reportar las 10 clases más fáciles y las 10 más difíciles. (motivos)
+
+
+Informe
+
+1. Abstract o Resumen: es el resumen del trabajo 4%
+
+2. Introducción: Aquí se describe el problema y el contexto. Aquí puedes describir las redes base del trabajo,
+algunas definiciones o descripciones de ellas así como del conjunto de datos que se utilizará. 6 %
+
+3. Desarrollo: Aquí se describe el diseño e implementación de los programas necesarios para realizar sus experimentos. 40 %
+
+4. Resultados Experimentales y Discusión: Aquí se prensentan los resultados, pero lo más importante es analizarlos.
+Observe y describa el comportamiento de los modelos en base a las métricas mencionadas anteriormente. 
+¿Puede genera algunas recomendaciones en base a sus observaciones? 40 %
+
+5. Conclusiones 10 %
+
+
