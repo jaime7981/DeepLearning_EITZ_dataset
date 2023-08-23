@@ -239,3 +239,7 @@ class ResNet(tf.keras.Model):
         x = tf.keras.layers.Flatten()(x)                        
         x = self.classifier(x)
         return x
+
+    def model(self, input_shape, training = True):
+        x = tf.keras.layers.Input(shape = input_shape)
+        return tf.keras.Model(inputs = [x], outputs = self.call(x, training))

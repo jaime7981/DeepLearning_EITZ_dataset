@@ -126,6 +126,7 @@ class LocalDataset():
 
 
 def train_model_save_data(model, dataset, name = 'default'):
+    print("running training model: " + name)
     timestamp = datetime.datetime.now()
     timestamp = timestamp.strftime("%Y_%m_%d_%H_%M_%S")
 
@@ -177,8 +178,12 @@ def main(dataset_model):
     timestamp = datetime.datetime.now()
     timestamp = timestamp.strftime("%Y_%m_%d_%H_%M_%S")
 
-    simple_model = SimpleModel(number_of_classes=dataset_model.number_of_classes)
+    simple_model = SimpleModel(
+        number_of_classes=dataset_model.number_of_classes
+    )
+
     simple_model = simple_model.model(input_shape)
+    
     simple_model.summary()
 
     simple_model.compile(
@@ -189,8 +194,21 @@ def main(dataset_model):
         ]
     )
 
-    resnet_model = ResNet(number_of_classes=dataset_model.number_of_classes)
+    # ResNet18
+
+    block_sizes = [2, 2, 2, 2]
+    initial_filters = 64
+    filters = [initial_filters, initial_filters * 2, initial_filters * 4, initial_filters * 8]
+
+    resnet_model = ResNet(
+        block_sizes=block_sizes,
+        filters=filters,
+        number_of_classes=dataset_model.number_of_classes,
+        use_bottleneck=False
+    )
+
     resnet_model = resnet_model.model(input_shape)
+
     resnet_model.summary()
 
     resnet_model.compile(
@@ -201,8 +219,28 @@ def main(dataset_model):
         ]
     )
 
+    bottleneck_model = ResNet(
+        block_sizes=block_sizes,
+        filters=filters,
+        number_of_classes=dataset_model.number_of_classes,
+        use_bottleneck=True
+    )
+
+    bottleneck_model = bottleneck_model.model(input_shape)
+
+    bottleneck_model.summary()
+
+    bottleneck_model.compile(
+        optimizer='adam',
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+        metrics=[
+            'accuracy'
+        ]
+    )
+
     #train_model_save_data(simple_model, dataset_model, 'simple')
     train_model_save_data(resnet_model, dataset_model, 'resnet')
+    #train_model_save_data(bottleneck_model, dataset_model, 'bottleneck')
 
 
 if __name__ == '__main__':
