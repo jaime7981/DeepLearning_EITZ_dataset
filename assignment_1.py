@@ -3,7 +3,7 @@ import csv, datetime
 from keras.preprocessing.image import load_img, img_to_array
 
 from simple import SimpleModel
-from resnet import SEBlock, ResidualBlock, BottleneckBlock, ResNetBlock, ResNetBackbone, ResNet
+from resnet import ResNet
 
 from sklearn.metrics import confusion_matrix
 import numpy as np
@@ -189,7 +189,20 @@ def main(dataset_model):
         ]
     )
 
-    train_model_save_data(simple_model, dataset_model, 'simple')
+    resnet_model = ResNet(number_of_classes=dataset_model.number_of_classes)
+    resnet_model = resnet_model.model(input_shape)
+    resnet_model.summary()
+
+    resnet_model.compile(
+        optimizer='adam',
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+        metrics=[
+            'accuracy'
+        ]
+    )
+
+    #train_model_save_data(simple_model, dataset_model, 'simple')
+    train_model_save_data(resnet_model, dataset_model, 'resnet')
 
 
 if __name__ == '__main__':
