@@ -231,6 +231,7 @@ class ResNet(tf.keras.Model):
         self.backbone = ResNetBackbone(block_sizes, filters, use_bottleneck, se_factor, kernel_regularizer = kernel_regularizer, name = 'backbone')                            
         self.avg_pool = tf.keras.layers.GlobalAveragePooling2D()                     
         self.classifier = tf.keras.layers.Dense(number_of_classes, name='classifier')
+        #self.dense = tf.keras.layers.Softmax()
         
     def call(self, inputs, training):
         x = inputs
@@ -238,6 +239,7 @@ class ResNet(tf.keras.Model):
         x = self.avg_pool(x)                
         x = tf.keras.layers.Flatten()(x)                        
         x = self.classifier(x)
+        #x = self.dense(x)
         return x
 
     def model(self, input_shape, training = True):

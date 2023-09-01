@@ -24,7 +24,7 @@ class GenerateGraph():
         plt.show()
 
     
-    def epoch_line_plot(self, file_path):
+    def epoch_line_plot(self, file_path, save_file):
         # Load training history from the CSV file
         history_df = pd.read_csv(file_path)
 
@@ -62,7 +62,8 @@ class GenerateGraph():
         plt.tight_layout()
 
         # Show the plots
-        plt.show()
+        #plt.show()
+        plt.savefig(save_file, bbox_inches='tight')
 
 
     def cm_heatmap(self, file_path, save_path):
@@ -86,17 +87,15 @@ class GenerateGraph():
         for i in range(len(confusion_df.index)):
             for j in range(len(confusion_df.columns)):
                 plt.text(j, i, str(confusion_matrix[i, j]), ha='center', va='center', color='black')
-
-        # Adjust layout
-        plt.tight_layout()
+            for j in range(len(confusion_df.columns)):
+                plt.text(j, i, str(confusion_matrix[i, j]), ha='center', va='center', color='black')
 
         # Show the heatmap
         #plt.show()
         plt.savefig(save_path, bbox_inches='tight')
 
-    
 
-    def plot_top_classes_histogram(self, confusion_matrix_df, top_k):
+    def plot_top_classes_histogram(self, confusion_matrix_df, top_k, save_file):
         # Convert the DataFrame to a numpy array
         confusion_matrix = confusion_matrix_df.values
 
@@ -114,10 +113,11 @@ class GenerateGraph():
         plt.ylabel('Confusion Sum')
 
         # Show the histogram
-        plt.show()
+        #plt.show()
+        plt.savefig(save_file, bbox_inches='tight')
 
 
-    def plot_worst_classes_histogram(self, confusion_matrix_df, worst_k):
+    def plot_worst_classes_histogram(self, confusion_matrix_df, worst_k, save_file):
         # Convert the DataFrame to a numpy array
         confusion_matrix = confusion_matrix_df.values
 
@@ -138,8 +138,8 @@ class GenerateGraph():
         plt.ylabel('Confusion Sum')
 
         # Show the histogram
-        plt.show()
-
+        #plt.show()
+        plt.savefig(save_file, bbox_inches='tight')
 
     def plot_top_classes_heatmap_with_labels(self, confusion_matrix_df, top_k):
         # Convert the DataFrame to a numpy array
@@ -226,19 +226,29 @@ def main():
 
     simple_confusion_matrix_path = 'simple_2023_08_20_18_18_10_confusion_matrix.csv'
     simple_epoch_history_path = 'simple_2023_08_20_18_18_10_history.csv'
-
     resnet_confusion_matrix_path = 'resnet_2023_08_23_14_05_52_confusion_matrix.csv'
+    resnet_epoch_history_path = 'resnet_2023_08_23_14_05_52_history.csv'
+
+    bottleneck_confusion_matrix_path = 'bottleneck_2023_08_23_13_22_14_confusion_matrix.csv'
+    bottleneck_epoch_history_path = 'bottleneck_2023_08_23_13_22_14_history.csv'
 
     simple_confusion_df = pd.read_csv(simple_confusion_matrix_path, index_col=0)
+    resnet_confusion_df = pd.read_csv(resnet_confusion_matrix_path, index_col=0)
+    bottleneck_confusion_df = pd.read_csv(bottleneck_confusion_matrix_path, index_col=0)
 
     graph_plotter = GenerateGraph()
-    #graph_plotter.epoch_line_plot(simple_epoch_history_path)
-    #graph_plotter.plot_top_classes_histogram(simple_confusion_df, top_k=10)
-    #graph_plotter.plot_worst_classes_histogram(simple_confusion_df, worst_k=10)
-    #graph_plotter.cm_heatmap(simple_confusion_matrix_path, 'simple_confusion_matrix.png')
-    graph_plotter.plot_top_classes_heatmap_with_labels(simple_confusion_df, top_k=10)
-    graph_plotter.plot_worst_classes_heatmap_with_labels_and_values(simple_confusion_df, worst_k=10)
+    graph_plotter.epoch_line_plot(simple_epoch_history_path, 'simple_epoch_history.png')
+    graph_plotter.epoch_line_plot(resnet_epoch_history_path, 'resnet_epoch_history.png')
+    graph_plotter.epoch_line_plot(bottleneck_epoch_history_path, 'bottleneck_epoch_history.png')
+    
+    graph_plotter.plot_top_classes_histogram(simple_confusion_df, top_k=10, save_file='simple_top_classes_histogram.png')
+    graph_plotter.plot_worst_classes_histogram(simple_confusion_df, worst_k=10, save_file='simple_worst_classes_histogram.png')
+
+    graph_plotter.plot_top_classes_histogram(resnet_confusion_df, top_k=10, save_file='resnet_top_classes_histogram.png')
+    graph_plotter.plot_worst_classes_histogram(resnet_confusion_df, worst_k=10, save_file='resnet_worst_classes_histogram.png')
+
+    graph_plotter.plot_top_classes_histogram(bottleneck_confusion_df, top_k=10, save_file='bottleneck_top_classes_histogram.png')
+    graph_plotter.plot_worst_classes_histogram(bottleneck_confusion_df, worst_k=10, save_file='bottleneck_worst_classes_histogram.png')
 
 
-if __name__ == '__main__':
-    main()
+main()

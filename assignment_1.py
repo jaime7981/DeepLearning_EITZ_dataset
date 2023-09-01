@@ -213,7 +213,7 @@ def main(dataset_model):
 
     resnet_model.compile(
         optimizer='adam',
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=[
             'accuracy'
         ]
@@ -232,15 +232,15 @@ def main(dataset_model):
 
     bottleneck_model.compile(
         optimizer='adam',
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=False),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=[
             'accuracy'
         ]
     )
 
     #train_model_save_data(simple_model, dataset_model, 'simple')
-    train_model_save_data(resnet_model, dataset_model, 'resnet')
-    #train_model_save_data(bottleneck_model, dataset_model, 'bottleneck')
+    #train_model_save_data(resnet_model, dataset_model, 'resnet')
+    train_model_save_data(bottleneck_model, dataset_model, 'bottleneck')
 
 
 if __name__ == '__main__':
